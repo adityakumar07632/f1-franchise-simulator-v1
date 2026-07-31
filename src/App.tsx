@@ -12940,7 +12940,7 @@ function AuctionScreen({ auctionState, gameState, onBid, onPass, onSkip, onSkipC
   const [liveTeams, setLiveTeams] = useState(externalTeams);
   const [liveLog, setLiveLog] = useState(externalLog || []);
   const [passedTeams, setPassedTeams] = useState(() => new Set(auctionState.passedTeams || []));
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(8);
   const [showSold, setShowSold] = useState(false);
   const [soldItem, setSoldItem] = useState(null);
   const [bidFlash, setBidFlash] = useState(false);
@@ -12959,7 +12959,7 @@ function AuctionScreen({ auctionState, gameState, onBid, onPass, onSkip, onSkipC
   const liveTeamsRef = useRef(externalTeams);
   const liveLogRef = useRef(externalLog || []);
   const passedTeamsRef = useRef(new Set(auctionState.passedTeams || []));
-  const countdownRef = useRef(5);
+  const countdownRef = useRef(8);
   const playerPassedRef = useRef(false);
   const lotFinalizedRef = useRef(false);
   const logDivRef = useRef(null);
@@ -13109,8 +13109,8 @@ function AuctionScreen({ auctionState, gameState, onBid, onPass, onSkip, onSkipC
           passedTeamsRef.current  = runningPassed;
 
           // Reset countdown on new high bid
-          setCountdown(5);
-          countdownRef.current = 5;
+          setCountdown(8);
+          countdownRef.current = 8;
 
           // Check for bidding war
           if (isEliteAssetFlag && currentBidderNow && currentBidderNow !== "player") {
@@ -13223,7 +13223,7 @@ function AuctionScreen({ auctionState, gameState, onBid, onPass, onSkip, onSkipC
     setLiveTeams(externalTeams);
     setLiveLog(externalLog || []);
     if (!isInitialMount) setPassedTeams(new Set());
-    setCountdown(5);
+    setCountdown(8);
     setIsBiddingWar(false);
     setBiddingWarTeams([]);
     setPlayerPassed(false);
@@ -13235,7 +13235,7 @@ function AuctionScreen({ auctionState, gameState, onBid, onPass, onSkip, onSkipC
     liveTeamsRef.current = externalTeams;
     liveLogRef.current = externalLog || [];
     if (!isInitialMount) passedTeamsRef.current = new Set();
-    countdownRef.current = 5;
+    countdownRef.current = 8;
     playerPassedRef.current = false;
     lotFinalizedRef.current = false;
     skipResultRef.current = false;   // reset so Skip works on every new lot
@@ -13280,11 +13280,11 @@ function AuctionScreen({ auctionState, gameState, onBid, onPass, onSkip, onSkipC
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queueIndex]);
 
-  // Reset countdown whenever liveBid changes (new bid = reset to 3)
+  // Reset countdown whenever liveBid changes (new bid = reset to 8)
   useEffect(() => {
     if (liveBid === externalBid) return; // initial mount, don't reset twice
-    setCountdown(5);
-    countdownRef.current = 5;
+    setCountdown(8);
+    countdownRef.current = 8;
     // Restart countdown
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     startCountdown();
@@ -13312,8 +13312,8 @@ function AuctionScreen({ auctionState, gameState, onBid, onPass, onSkip, onSkipC
     playerPassedRef.current = false;
 
     // Reset countdown
-    setCountdown(5);
-    countdownRef.current = 5;
+    setCountdown(8);
+    countdownRef.current = 8;
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     startCountdown();
 
@@ -13652,7 +13652,7 @@ function AuctionScreen({ auctionState, gameState, onBid, onPass, onSkip, onSkipC
                   <svg width="72" height="72" viewBox="0 0 72 72" style={{ transform:"rotate(-90deg)" }}>
                     <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="5"/>
                     <circle cx="36" cy="36" r="30" fill="none" stroke={cdColor} strokeWidth="5"
-                      strokeDasharray={`${(countdown/5)*188.5} 188.5`}
+                      strokeDasharray={`${(countdown/8)*188.5} 188.5`}
                       strokeLinecap="round"
                       style={{ transition:"stroke-dasharray 0.9s linear, stroke 0.3s ease" }}/>
                   </svg>
