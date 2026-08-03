@@ -55,7 +55,7 @@ const FORM_COLORS = { Excellent:"#00d25b", Good:"#7ed56f", Normal:"#f4d03f", Poo
 const GAME_TITLE       = "F1 Franchise Simulator";       // display-case title
 const GAME_TITLE_UPPER = GAME_TITLE.toUpperCase();        // "F1 FRANCHISE SIMULATOR" — used in uppercase wordmarks/watermarks
 const GAME_TAGLINE     = "Build Your Legacy";
-const GAME_SUBTITLE    = "4-Season Franchise Management Experience";
+const GAME_SUBTITLE    = "2-Season Franchise Management Experience";
 const GAME_VERSION     = "1.0";
 
 // ─── v192: AUCTION DEBT — shared budget-credit helper ────────────────────────
@@ -253,7 +253,7 @@ const HISTORIC_RECORDS_KEY = "f1_historic_records_v1"; // PERMANENT — never cl
 const HOF_KEY = "f1_hall_of_fame_v1";
 
 // ─── FRANCHISE MODE CONSTANTS ─────────────────────────────────────────────────
-const TOTAL_SEASONS = 4;
+const TOTAL_SEASONS = 2;
 // ─── SINGLE SOURCE OF TRUTH FOR GOAT / DYNASTY SCORING ──────────────────────
 // ALL scoring formulas in the game — Hall of Fame rankings, dynasty tier
 // calculations, end-game standings, unlock checks, and displayed formula text —
@@ -263,7 +263,7 @@ const TOTAL_SEASONS = 4;
 //   • HallOfFameScreen / EndGameScreen used ×300 / ×40 / ×10 (v90 rebalance)
 // Canonical weights are now the v90 rebalanced values (×300 / ×40 / ×10).
 // GOAT Score = (Champs × 300) + (Wins × 40) + (Podiums × 10) + Career Points
-// Max possible 4-season score: 4×300 + (64wins×40) + (192pods×10) + ~6000pts ≈ 10,120+
+// Max possible score scales with TOTAL_SEASONS (championships × 300, wins/podiums/points from RACES_PER_SEASON × TOTAL_SEASONS races).
 const GOAT_SCORING = {
   championship: 300,
   win:          40,
@@ -296,7 +296,7 @@ function calculateGoatScore(stats) {
 }
 
 // ─── CAREER FINALE: MANAGER RANK ────────────────────────────────────────────
-// Labels a finished 4-season career using the SAME calculateGoatScore() output
+// Labels a finished career (TOTAL_SEASONS seasons) using the SAME calculateGoatScore() output
 // already used everywhere else (HallOfFameScreen, EndGameScreen, dynasty tiers).
 // This is purely a presentational bucketing on top of the existing score — it
 // introduces no new scoring math and never recalculates GOAT/Dynasty values.
@@ -4624,7 +4624,7 @@ function hasSave() { return !!localStorage.getItem(SAVE_KEY); }
 
 // ─── FULL CAREER RESET ─────────────────────────────────────────────────────────
 // v132: Wipes EVERY storage key written by this game so a New Career after a
-// completed 4-season career behaves exactly like a fresh install.
+// completed career behaves exactly like a fresh install.
 // Cleared keys / systems:
 //   SAVE_KEY              ("f1_auction_league_v17")   — career save: teams, races,
 //                          allRaceResults, seasonChampions, upgradeLog,
@@ -5114,7 +5114,7 @@ function recordAuctionResults(auctionSales, retentionSales, teamTotals, season, 
   return rec;
 }
 
-// Increment career count in historic records when a career completes (Season 4 done).
+// Increment career count in historic records when a career completes (final season done).
 function incrementHistoricCareerCount() {
   const rec = loadHistoricRecords();
   rec.careerCount = (rec.careerCount || 0) + 1;
@@ -10134,34 +10134,34 @@ const TrophyRoomScreen = memo(function TrophyRoomScreen({ hofData, gameState, ac
           })}
         </div>
 
-        {/* CHAMPIONSHIP LEGACY — The 4-season title story */}
+        {/* CHAMPIONSHIP LEGACY — The TOTAL_SEASONS-season title story */}
         <div style={{ background:"linear-gradient(135deg,rgba(244,208,63,0.07),rgba(225,6,0,0.04))", border:"1px solid rgba(244,208,63,0.2)", borderRadius:18, padding:24, marginBottom:20, animation:"hofCardIn 0.5s ease 0.3s both" }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
             <div style={{ fontSize:10, letterSpacing:4, color:"#f4d03f", fontWeight:700 }}>CHAMPIONSHIP LEGACY</div>
-            <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", letterSpacing:2 }}>MAX 4 PER TYPE</div>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", letterSpacing:2 }}>MAX {TOTAL_SEASONS} PER TYPE</div>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:16 }}>
             <div style={{ background:"rgba(244,208,63,0.08)", border:"1px solid rgba(244,208,63,0.25)", borderRadius:12, padding:18, textAlign:"center" }}>
               <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", letterSpacing:3, marginBottom:8 }}>CONSTRUCTORS'</div>
               <div style={{ display:"flex", gap:8, justifyContent:"center", marginBottom:8 }}>
-                {Array.from({length:4}).map((_,i) => (
+                {Array.from({length:TOTAL_SEASONS}).map((_,i) => (
                   <div key={i} style={{ width:36, height:36, borderRadius:8, background:i<liveChamps?"rgba(244,208,63,0.25)":"rgba(255,255,255,0.05)", border:`2px solid ${i<liveChamps?"#f4d03f":"rgba(255,255,255,0.1)"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, transition:"all 0.3s" }}>
                     {i<liveChamps?"🏆":""}
                   </div>
                 ))}
               </div>
-              <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:28, fontWeight:900, color:liveChamps>0?"#f4d03f":"rgba(255,255,255,0.2)" }}>{liveChamps} / 4</div>
+              <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:28, fontWeight:900, color:liveChamps>0?"#f4d03f":"rgba(255,255,255,0.2)" }}>{liveChamps} / {TOTAL_SEASONS}</div>
             </div>
             <div style={{ background:"rgba(225,6,0,0.08)", border:"1px solid rgba(225,6,0,0.25)", borderRadius:12, padding:18, textAlign:"center" }}>
               <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", letterSpacing:3, marginBottom:8 }}>DRIVERS'</div>
               <div style={{ display:"flex", gap:8, justifyContent:"center", marginBottom:8 }}>
-                {Array.from({length:4}).map((_,i) => (
+                {Array.from({length:TOTAL_SEASONS}).map((_,i) => (
                   <div key={i} style={{ width:36, height:36, borderRadius:8, background:i<liveDriverChamps?"rgba(225,6,0,0.25)":"rgba(255,255,255,0.05)", border:`2px solid ${i<liveDriverChamps?"#e10600":"rgba(255,255,255,0.1)"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, transition:"all 0.3s" }}>
                     {i<liveDriverChamps?"🥇":""}
                   </div>
                 ))}
               </div>
-              <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:28, fontWeight:900, color:liveDriverChamps>0?"#e10600":"rgba(255,255,255,0.2)" }}>{liveDriverChamps} / 4</div>
+              <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:28, fontWeight:900, color:liveDriverChamps>0?"#e10600":"rgba(255,255,255,0.2)" }}>{liveDriverChamps} / {TOTAL_SEASONS}</div>
             </div>
           </div>
           <div style={{ textAlign:"center", fontSize:12, color:"rgba(255,255,255,0.3)", fontStyle:"italic" }}>
@@ -12143,11 +12143,11 @@ export default function App() {
   if (screen === "upgrade" && upgradeState) return <>{navBar}{confirmModal}{v9Overlays}<div style={{paddingTop:52}}><UpgradeScreen gameState={gameState} upgradeState={upgradeState} onUpgrade={applyPlayerUpgrade} onConfirm={confirmUpgrades} isMiniAuction={(gameState?.currentSeason||1) > 1} /></div></>;
   if (screen === "teamHQ") return <>{navBar}{confirmModal}{v9Overlays}<div style={{paddingTop:52}}><TeamHQScreen gameState={gameState} onBack={()=>setScreen(gameState.races?"raceCalendar":"season")} onBackTo={s=>setScreen(s)} /></div></>;
   if (screen === "careerSummary") return <>{confirmModal}{v9Overlays}<CareerSummaryScreen gameState={gameState} hofData={hofData||loadHOF()} onContinue={()=>{ setScreen("seasonReview"); }} onNewCareer={doRestartCareer} /></>;
-  // ── CAREER FINALE (Season 4 only): Drivers HOF → Constructors HOF → Career Legacy → Main Menu ──
+  // ── CAREER FINALE (final season only): Drivers HOF → Constructors HOF → Career Legacy → Main Menu ──
   if (screen === "driversHOF") return <>{confirmModal}{v9Overlays}<DriversHallOfFameScreen gameState={gameState} onContinue={()=>setScreen("constructorsHOF")} /></>;
   if (screen === "constructorsHOF") return <>{confirmModal}{v9Overlays}<ConstructorsHallOfFameScreen gameState={gameState} onContinue={()=>setScreen("careerLegacy")} /></>;
   if (screen === "careerLegacy") return <>{confirmModal}{v9Overlays}<CareerLegacyScreen gameState={gameState} hofData={hofData||loadHOF()} budgetWatermark={budgetWatermarkRef.current} onMainMenu={()=>{
-    // v132: Season 4 is complete — wipe every persisted storage key so the
+    // v132: Career is complete — wipe every persisted storage key so the
     // next "Start Career" on the Intro screen is a true fresh install.
     fullCareerReset();
     resetAchievements();
@@ -12193,7 +12193,7 @@ function HowToPlayScreen({ onBack }) {
       title: "OBJECTIVE",
       color: "#e10600",
       items: [
-        "Build the most successful F1 franchise across 4 seasons.",
+        "Build the most successful F1 franchise across 2 seasons.",
         "Win races, championships, and create a dynasty.",
         "Your legacy is measured by wins, podiums, and constructor titles.",
       ],
@@ -12236,7 +12236,7 @@ function HowToPlayScreen({ onBack }) {
       title: "CAREER MODE",
       color: "#00d25b",
       items: [
-        "Your career spans 4 full seasons — 16 races each, 64 total events.",
+        "Your career spans 2 full seasons — 16 races each, 32 total events.",
         "Career points, wins, podiums, and championships accumulate permanently.",
         "Season reviews track your progress and unlock dynasty tiers.",
         "Each new season brings fresh driver auctions and transfer windows.",
@@ -12323,7 +12323,7 @@ function HowToPlayScreen({ onBack }) {
             WELCOME TO {GAME_TITLE_UPPER}
           </div>
           <div style={{ fontSize:14, color:"rgba(255,255,255,0.65)", lineHeight:1.65 }}>
-            A complete 4-season Formula 1 franchise management experience. Build your team from the ground up — win drivers, constructors, and tracks at auction, manage your budget and upgrades, fight for championships, and grow a lasting dynasty across 64 races.
+            A complete 2-season Formula 1 franchise management experience. Build your team from the ground up — win drivers, constructors, and tracks at auction, manage your budget and upgrades, fight for championships, and grow a lasting dynasty across 32 races.
           </div>
         </div>
 
@@ -12448,7 +12448,7 @@ function AboutScreen({ onBack }) {
             <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:12, fontWeight:900, color:"#f4d03f", letterSpacing:3 }}>WHAT IS {GAME_TITLE_UPPER}?</div>
           </div>
           <div style={{ fontSize:14, color:"rgba(255,255,255,0.7)", lineHeight:1.7 }}>
-            {GAME_TITLE} is a complete Formula 1 team management experience, not just a bidding game. You build a franchise from scratch — assembling a roster through driver and constructor auctions, securing a home track, and managing your budget season after season. From there, the real work begins: upgrading your team, fighting for Drivers' and Constructors' Championships, and building a dynasty that's remembered in the Hall of Fame and Trophy Room. Auctions kick off your career; managing, racing, and growing your legacy across 4 full seasons is what the game is really about.
+            {GAME_TITLE} is a complete Formula 1 team management experience, not just a bidding game. You build a franchise from scratch — assembling a roster through driver and constructor auctions, securing a home track, and managing your budget season after season. From there, the real work begins: upgrading your team, fighting for Drivers' and Constructors' Championships, and building a dynasty that's remembered in the Hall of Fame and Trophy Room. Auctions kick off your career; managing, racing, and growing your legacy across 2 full seasons is what the game is really about.
           </div>
         </div>
 
@@ -12589,7 +12589,7 @@ function AboutScreen({ onBack }) {
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
             {[
               { label:"Developer", val:"Aditya Kumar" },
-              { label:"Seasons", val:"4 Seasons · 64 Races" },
+              { label:"Seasons", val:"2 Seasons · 32 Races" },
               { label:"Type", val:"Fan Project · Portfolio" },
             ].map(({ label, val }) => (
               <div key={label} style={{ background:"rgba(255,255,255,0.03)", borderRadius:8, padding:"10px 14px" }}>
@@ -12732,7 +12732,7 @@ function IntroScreen({ onStart, onLoad, hasSave, onHallOfFame, onTrophyRoom, onR
         {[
           { icon:"💰", label:"315M Budget", sub:"Massive bidding wars" },
           { icon:"🏎", label:"Race Engine 2.0", sub:"Multi-phase simulation" },
-          { icon:"🏆", label:"4 Season Career", sub:"64 races total" }
+          { icon:"🏆", label:"2 Season Career", sub:"32 races total" }
         ].map(({ icon, label, sub }) => (
           <div key={label} style={{ textAlign:"center", padding:"18px 8px", background:"rgba(255,255,255,0.03)", borderRadius:12, border:"1px solid rgba(255,255,255,0.06)" }}>
             <div style={{ fontSize:26, marginBottom:8 }}>{icon}</div>
@@ -19582,7 +19582,7 @@ function TeamHQScreen({ gameState, onBack, onBackTo }) {
 
 // ─── CAREER FINALE: HALL OF FAME DATA HELPERS ───────────────────────────────
 // These build the Top-3 driver / constructor lists for the just-finished
-// 4-season career. They are pure read/aggregate helpers: every ranking still
+// just-finished career. They are pure read/aggregate helpers: every ranking still
 // goes through calculateGoatScore() (the single source of truth declared at
 // the top of this file) — nothing here recomputes GOAT, Dynasty, or
 // championship logic, it only gathers existing career-cumulative fields.
@@ -19651,7 +19651,7 @@ function getCareerTopConstructors(gameState) {
 
 // ─── CAREER SUMMARY SCREEN ───────────────────────────────────────────────────
 // Shown after the final season completes, before the season review.
-// Celebrates the end of the 4-season career and lets the player continue to the
+// Celebrates the end of the career and lets the player continue to the
 // season review or start a new career.
 function CareerSummaryScreen({ gameState, hofData, onContinue, onNewCareer }) {
   const { teams, seasonChampions, currentSeason } = gameState;
@@ -19695,7 +19695,7 @@ function CareerSummaryScreen({ gameState, hofData, onContinue, onNewCareer }) {
 
       {/* Headline */}
       <div style={{ opacity:phase>=1?1:0, transition:"opacity 0.6s ease 0.2s", textAlign:"center", marginBottom:12 }}>
-        <div style={{ fontSize:11, letterSpacing:8, color:"rgba(255,255,255,0.45)", marginBottom:8 }}>4-SEASON CAREER COMPLETE</div>
+        <div style={{ fontSize:11, letterSpacing:8, color:"rgba(255,255,255,0.45)", marginBottom:8 }}>{TOTAL_SEASONS}-SEASON CAREER COMPLETE</div>
         <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:"clamp(28px,6vw,52px)", fontWeight:900, background:"linear-gradient(135deg,#f4d03f,#fff5b0,#f4d03f)", backgroundSize:"200% auto", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", animation:"csShimmer 3s linear infinite", lineHeight:1.1 }}>
           YOUR LEGACY
         </div>
@@ -19706,7 +19706,7 @@ function CareerSummaryScreen({ gameState, hofData, onContinue, onNewCareer }) {
       {playerChamps > 0 && (
         <div style={{ opacity:phase>=2?1:0, transition:"opacity 0.6s ease 0.4s", background:"linear-gradient(135deg,rgba(244,208,63,0.15),rgba(244,208,63,0.05))", border:"2px solid rgba(244,208,63,0.4)", borderRadius:16, padding:"14px 32px", marginBottom:20, textAlign:"center", animation:"csGold 2s ease infinite" }}>
           <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:22, fontWeight:900, color:"#f4d03f" }}>
-            {playerChamps === 4 ? "👑 PERFECT — 4 CHAMPIONSHIPS!" : `🏆 ${playerChamps} CHAMPIONSHIP${playerChamps>1?"S":""} WON`}
+            {playerChamps === TOTAL_SEASONS ? `👑 PERFECT — ${TOTAL_SEASONS} CHAMPIONSHIPS!` : `🏆 ${playerChamps} CHAMPIONSHIP${playerChamps>1?"S":""} WON`}
           </div>
         </div>
       )}
@@ -19887,7 +19887,7 @@ function DriversHallOfFameScreen({ gameState, onContinue }) {
 
       <div style={{ maxWidth:620, margin:"0 auto", position:"relative", zIndex:1 }}>
         <div style={{ textAlign:"center", marginBottom:36, animation:"finaleHeaderIn 0.6s ease" }}>
-          <div style={{ fontSize:11, letterSpacing:8, color:"#f4d03f", fontWeight:700, marginBottom:10 }}>FOUR SEASONS · CAREER COMPLETE</div>
+          <div style={{ fontSize:11, letterSpacing:8, color:"#f4d03f", fontWeight:700, marginBottom:10 }}>TWO SEASONS · CAREER COMPLETE</div>
           <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:"clamp(28px,6vw,46px)", fontWeight:900, lineHeight:1.05, background:"linear-gradient(135deg,#f4d03f,#fff5b0,#f4d03f)", backgroundSize:"200% auto", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", animation:"finaleShimmer 3s linear infinite" }}>
             🏆 DRIVERS HALL OF FAME
           </div>
@@ -19938,7 +19938,7 @@ function ConstructorsHallOfFameScreen({ gameState, onContinue }) {
 
       <div style={{ maxWidth:620, margin:"0 auto", position:"relative", zIndex:1 }}>
         <div style={{ textAlign:"center", marginBottom:36, animation:"finaleHeaderIn 0.6s ease" }}>
-          <div style={{ fontSize:11, letterSpacing:8, color:"#f4d03f", fontWeight:700, marginBottom:10 }}>FOUR SEASONS · CAREER COMPLETE</div>
+          <div style={{ fontSize:11, letterSpacing:8, color:"#f4d03f", fontWeight:700, marginBottom:10 }}>TWO SEASONS · CAREER COMPLETE</div>
           <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:"clamp(28px,6vw,46px)", fontWeight:900, lineHeight:1.05, background:"linear-gradient(135deg,#f4d03f,#fff5b0,#f4d03f)", backgroundSize:"200% auto", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", animation:"finaleShimmer 3s linear infinite" }}>
             🏆 CONSTRUCTORS HALL OF FAME
           </div>
@@ -20085,7 +20085,7 @@ function CareerLegacyScreen({ gameState, hofData, budgetWatermark, onMainMenu })
 
       <div style={{ maxWidth:680, margin:"0 auto", position:"relative", zIndex:1 }}>
         <div style={{ textAlign:"center", marginBottom:30, animation:"finaleHeaderIn 0.6s ease" }}>
-          <div style={{ fontSize:11, letterSpacing:8, color:"#f4d03f", fontWeight:700, marginBottom:10 }}>FOUR SEASONS · CAREER COMPLETE</div>
+          <div style={{ fontSize:11, letterSpacing:8, color:"#f4d03f", fontWeight:700, marginBottom:10 }}>TWO SEASONS · CAREER COMPLETE</div>
           <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:"clamp(28px,6vw,46px)", fontWeight:900, lineHeight:1.05, background:"linear-gradient(135deg,#f4d03f,#fff5b0,#f4d03f)", backgroundSize:"200% auto", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", animation:"finaleShimmer 3s linear infinite" }}>
             🏆 YOUR CAREER LEGACY
           </div>
@@ -20216,7 +20216,7 @@ function EndGameScreen({ gameState, onRestart, onRestartCareer, onHallOfFame, on
       <div style={{ position:"fixed", top:"10%", left:"50%", transform:"translateX(-50%)", width:800, height:400, background:"radial-gradient(ellipse,rgba(244,208,63,0.05) 0%,transparent 70%)", pointerEvents:"none" }}/>
       <div style={{ maxWidth:1040, margin:"0 auto", position:"relative" }}>
         <div style={{ textAlign:"center", marginBottom:48, animation:"fadeIn 0.8s ease" }}>
-          <div style={{ fontSize:11, letterSpacing:8, color:"#f4d03f", fontWeight:700, marginBottom:16 }}>FOUR SEASONS COMPLETE · CAREER OVER</div>
+          <div style={{ fontSize:11, letterSpacing:8, color:"#f4d03f", fontWeight:700, marginBottom:16 }}>TWO SEASONS COMPLETE · CAREER OVER</div>
           <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:72, fontWeight:900, lineHeight:0.9, marginBottom:8, background:"linear-gradient(135deg,#f4d03f,#d4ac0d,#f4d03f)", backgroundSize:"200% auto", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", animation:"shimmerGold 3s linear infinite" }}>HALL OF<br/>FAME</div>
           <div style={{ fontSize:14, color:"rgba(255,255,255,0.35)", letterSpacing:3 }}>{GAME_TITLE_UPPER} V{GAME_VERSION} · CAREER COMPLETE</div>
         </div>
