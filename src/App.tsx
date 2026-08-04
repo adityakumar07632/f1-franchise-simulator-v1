@@ -247,6 +247,7 @@ function advanceDriverForm(driver, result) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SAVE_KEY = "f1_auction_league_v17";
+const TUTORIAL_HIDE_KEY = "f1_hide_tutorial_v1"; // persisted "Don't show this tutorial again" preference
 const AUCTION_AUTOSAVE_KEY = "f1_auction_autosave_v1";
 const HISTORIC_RECORDS_KEY = "f1_historic_records_v1"; // PERMANENT — never cleared on new career
 
@@ -423,20 +424,20 @@ const ACHIEVEMENT_DEFS = [
     id: "triple_crown",
     category: "championships",
     title: "Triple Crown",
-    desc: "Win 3 Constructors' Championships",
+    desc: "Win 2 Constructors' Championships",
     icon: "👑",
     tier: "platinum",
-    target: 3,
+    target: 2,
     statKey: "totalChampionships",
   },
   {
     id: "dynasty_builder",
     category: "championships",
     title: "Dynasty Builder",
-    desc: "Win all 4 Constructors' Championships",
+    desc: "Win both Constructors' Championships",
     icon: "🌟",
     tier: "platinum",
-    target: 4,
+    target: 2,
     statKey: "totalChampionships",
   },
 
@@ -475,20 +476,20 @@ const ACHIEVEMENT_DEFS = [
     id: "twenty_five_wins",
     category: "races",
     title: "Race Legend",
-    desc: "Win 25 races across your career",
+    desc: "Win 15 races across your career",
     icon: "⚡",
     tier: "gold",
-    target: 25,
+    target: 15,
     statKey: "totalWins",
   },
   {
     id: "forty_wins",
     category: "races",
     title: "Race Master",
-    desc: "Win 40 races across your career",
+    desc: "Win 20 races across your career",
     icon: "💎",
     tier: "platinum",
-    target: 40,
+    target: 20,
     statKey: "totalWins",
   },
   {
@@ -505,20 +506,20 @@ const ACHIEVEMENT_DEFS = [
     id: "thirty_podiums",
     category: "races",
     title: "Podium Elite",
-    desc: "Earn 30 podium finishes across your career",
+    desc: "Earn 15 podium finishes across your career",
     icon: "🥇",
     tier: "gold",
-    target: 30,
+    target: 15,
     statKey: "totalPodiums",
   },
   {
     id: "fifty_podiums",
     category: "races",
     title: "Podium Master",
-    desc: "Earn 50 podium finishes across your career",
+    desc: "Earn 20 podium finishes across your career",
     icon: "🎖",
     tier: "platinum",
-    target: 50,
+    target: 20,
     statKey: "totalPodiums",
   },
 
@@ -537,20 +538,20 @@ const ACHIEVEMENT_DEFS = [
     id: "earn_250m",
     category: "financial",
     title: "Big Spender",
-    desc: "Earn a total of $250M in prize money",
+    desc: "Earn a total of $150M in prize money",
     icon: "💵",
     tier: "silver",
-    target: 250000000,
+    target: 150000000,
     statKey: "totalEarnings",
   },
   {
     id: "earn_500m",
     category: "financial",
     title: "Half a Billion",
-    desc: "Earn a total of $500M in prize money",
+    desc: "Earn a total of $300M in prize money",
     icon: "🤑",
     tier: "gold",
-    target: 500000000,
+    target: 300000000,
     statKey: "totalEarnings",
   },
   {
@@ -567,10 +568,10 @@ const ACHIEVEMENT_DEFS = [
     id: "value_750m",
     category: "financial",
     title: "Elite Franchise",
-    desc: "Reach a team value of $750M",
+    desc: "Reach a team value of $300M",
     icon: "💎",
     tier: "platinum",
-    target: 750000000,
+    target: 300000000,
     statKey: "teamValue",
   },
 
@@ -609,20 +610,20 @@ const ACHIEVEMENT_DEFS = [
     id: "points_500",
     category: "performance",
     title: "Point Machine",
-    desc: "Score 500 career championship points",
+    desc: "Score 250 career championship points",
     icon: "📊",
     tier: "silver",
-    target: 500,
+    target: 250,
     statKey: "careerPoints",
   },
   {
     id: "points_1000",
     category: "performance",
     title: "Thousand Club",
-    desc: "Score 1000 career championship points",
+    desc: "Score 500 career championship points",
     icon: "🎯",
     tier: "gold",
-    target: 1000,
+    target: 500,
     statKey: "careerPoints",
   },
 
@@ -671,7 +672,7 @@ const ACHIEVEMENT_DEFS = [
     id: "greatest_team",
     category: "career",
     title: "Greatest Team Ever",
-    desc: "Win 3 championships and reach $500M team value",
+    desc: "Win both championships and reach $300M team value",
     icon: "👑",
     tier: "platinum",
     target: 1,
@@ -860,7 +861,7 @@ const deriveStats = (gameState) => {
     seasonsCompleted,
     hofInductions,
     goatUnlocked,
-    greatestTeam: totalChampionships >= 3 && teamValueM >= 500 ? 1 : 0,
+    greatestTeam: totalChampionships >= 2 && teamValueM >= 300 ? 1 : 0,
   };
 };
 // AchievementPopup removed in v39 — popups were disabled (achPopup=null) and caused overhead.
@@ -4621,6 +4622,9 @@ function loadGame() {
   } catch { return null; }
 }
 function hasSave() { return !!localStorage.getItem(SAVE_KEY); }
+// ─── TUTORIAL PREFERENCE ────────────────────────────────────────────────────
+function shouldHideTutorial() { try { return localStorage.getItem(TUTORIAL_HIDE_KEY) === "1"; } catch { return false; } }
+function setHideTutorial(hide) { try { if (hide) localStorage.setItem(TUTORIAL_HIDE_KEY, "1"); else localStorage.removeItem(TUTORIAL_HIDE_KEY); } catch {} }
 
 // ─── FULL CAREER RESET ─────────────────────────────────────────────────────────
 // v132: Wipes EVERY storage key written by this game so a New Career after a
@@ -10709,7 +10713,11 @@ export default function App() {
     fullCareerReset();
     setHofData(defaultHOFShape());
     startAuction(gs, 1, false);
-    setScreen("auction");
+    // The auction itself is already fully prepared above (auctionState is set),
+    // so once the tutorial is dismissed/completed we just flip the screen to
+    // "auction" and it's ready instantly. If the player previously checked
+    // "Don't show this tutorial again", skip straight to the auction.
+    setScreen(shouldHideTutorial() ? "auction" : "tutorial");
   }
 
   // ─── AUCTION ──────────────────────────────────────────────────────────────
@@ -12043,6 +12051,7 @@ export default function App() {
     setScreenHistory([]);
     setScreen("intro");
   }} /></>;
+  if (screen === "tutorial") return <>{confirmModal}{v9Overlays}<TutorialScreen onFinish={()=>setScreen("auction")} /></>;
   if (screen === "auction" && auctionState) return <>{confirmModal}{v9Overlays}<AuctionScreen auctionState={auctionState} gameState={gameState} onBid={playerBid} onPass={playerPass} onSkip={skipToNextLot} onSkipCurrentSlot={skipCurrentLot} onSimRemaining={simRemainingLots} onSave={()=>{ triggerSave(); saveAuctionAutosave(gameState, auctionState, "auction"); }} onMainMenu={()=>setConfirmDialog({type:"auction-exit",title:"Exit Auction?",body:"You can save your progress and resume later, or exit without saving.",onConfirm:()=>{ deleteAuctionAutosave(); setConfirmDialog(null); setScreen("intro"); },onSaveAndExit:()=>{ triggerSave(); saveAuctionAutosave(gameState, auctionState, "auction"); setConfirmDialog(null); setScreen("intro"); }})} /></>;
   if (screen === "auctionValidation") return <>{confirmModal}{v9Overlays}{gameState ? <AuctionValidationScreen gameState={gameState} onContinue={()=>setScreen("season")} /> : null}</>;
   if (screen === "season") return <>{navBar}{confirmModal}{v9Overlays}<div style={{paddingTop:52}}>{gameState ? <SeasonScreen gameState={gameState} onStart={startSeason} /> : null}</div></>;
@@ -12619,6 +12628,301 @@ function AboutScreen({ onBack }) {
           >← Back to Main Menu</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── TUTORIAL / ONBOARDING SCREEN ──────────────────────────────────────────
+// Mandatory (unless previously dismissed) walkthrough shown after "Start
+// Career" and before the first auction begins. Purely informational — does
+// not touch gameplay state. 6 pages, Back/Next/Skip nav, progress dots, and
+// a persisted "Don't show this tutorial again" preference.
+const TUTORIAL_PAGES = [
+  {
+    icon: "🏁",
+    accent: "#e10600",
+    eyebrow: "PAGE 1 OF 6",
+    title: "Welcome, Team Principal!",
+    intro: "Your goal is to build the greatest Formula 1 franchise over a 2-season career.",
+    body: "During your journey you will:",
+    items: [
+      { icon: "🏗", text: "Build your team through auctions" },
+      { icon: "🤖", text: "Compete against 9 AI teams" },
+      { icon: "🏆", text: "Win races and championships" },
+      { icon: "💰", text: "Manage your budget wisely" },
+      { icon: "🔧", text: "Upgrade your franchise" },
+      { icon: "🏛", text: "Earn achievements and Hall of Fame recognition" },
+    ],
+  },
+  {
+    icon: "🔨",
+    accent: "#f4d03f",
+    eyebrow: "PAGE 2 OF 6",
+    title: "Team Auction",
+    intro: "Every team begins with the same budget.",
+    body: "You will compete against 9 AI-controlled teams to purchase:",
+    chips: [
+      { icon: "🏎", text: "Drivers" },
+      { icon: "🏭", text: "Constructors" },
+      { icon: "🏁", text: "Tracks" },
+    ],
+    tipsTitle: "Important Tips:",
+    tips: [
+      "Think carefully before spending.",
+      "Don't spend your entire budget on one superstar.",
+      "Build a balanced team.",
+      "The auction timer gives limited time to make decisions, so plan your bids wisely.",
+    ],
+  },
+  {
+    icon: "🏎",
+    accent: "#00d25b",
+    eyebrow: "PAGE 3 OF 6",
+    title: "Race Season",
+    intro: "After the auction, the season begins.",
+    body: "Your drivers automatically compete in every race. Throughout the season you will:",
+    items: [
+      { icon: "💵", text: "Earn prize money" },
+      { icon: "📊", text: "Score championship points" },
+      { icon: "🏆", text: "Compete for Drivers' and Constructors' Championships" },
+      { icon: "📈", text: "Build your team's legacy" },
+    ],
+    footer: "Strong management decisions throughout the season will determine your success.",
+  },
+  {
+    icon: "🔁",
+    accent: "#4fc3f7",
+    eyebrow: "PAGE 4 OF 6",
+    title: "Between Seasons",
+    intro: "After Season 1, your franchise enters the off-season.",
+    subsections: [
+      {
+        title: "Transfer Window",
+        color: "#4fc3f7",
+        lines: ["Improve your team by signing available drivers.", "Replace underperforming drivers if necessary."],
+      },
+      {
+        title: "Retention Window",
+        color: "#f4d03f",
+        lines: ["You may retain ONLY ONE DRIVER before the next auction.", "Choose carefully.", "Retaining the right driver can provide a huge advantage in the following season."],
+      },
+    ],
+  },
+  {
+    icon: "⚡",
+    accent: "#c084fc",
+    eyebrow: "PAGE 5 OF 6",
+    title: "Tracks & Power-Ups",
+    intro: "Tracks are valuable franchise assets that can influence your team's performance throughout your career.",
+    body: "Each track comes with a certain number of Power-Ups based on its tier. Higher-tier tracks provide more Power-Ups than lower-tier tracks.",
+    tipsTitle: "Important:",
+    tips: [
+      "Power-Ups DO NOT guarantee race wins or podium finishes.",
+      "They only increase the probability that your selected driver performs better during a race.",
+      "Driver rating, constructor strength, track bonuses, AI strategy, and race simulation all contribute to the final result.",
+    ],
+  },
+  {
+    icon: "🎯",
+    accent: "#fb8c00",
+    eyebrow: "PAGE 6 OF 6",
+    title: "Power-Up Strategy",
+    intro: "Before each race you may assign Power-Ups.",
+    tipsTitle: "Rules:",
+    tips: [
+      "Only ONE DRIVER can receive Power-Ups in a race.",
+      "You cannot assign Power-Ups to both drivers in the same race.",
+      "Choosing which driver to support is an important strategic decision.",
+    ],
+    footer: "Using your Power-Ups wisely throughout the season can make the difference between winning and losing a championship.",
+  },
+];
+
+function TutorialScreen({ onFinish }) {
+  const [page, setPage] = useState(0);
+  const [dontShow, setDontShow] = useState(false);
+  const [dir, setDir] = useState(1); // 1 = forward, -1 = backward (drives slide direction)
+  const total = TUTORIAL_PAGES.length;
+  const isLast = page === total - 1;
+  const data = TUTORIAL_PAGES[page];
+
+  function finish() {
+    setHideTutorial(dontShow);
+    onFinish?.();
+  }
+  function goNext() {
+    if (isLast) { finish(); return; }
+    setDir(1);
+    setPage(p => Math.min(p + 1, total - 1));
+  }
+  function goBack() {
+    setDir(-1);
+    setPage(p => Math.max(p - 1, 0));
+  }
+  function skip() {
+    finish();
+  }
+
+  return (
+    <div style={{ minHeight:"100vh", background:"linear-gradient(135deg,#080810 0%,#0f0a14 50%,#0a1020 100%)", fontFamily:"'Rajdhani',sans-serif", color:"#fff", display:"flex", flexDirection:"column", position:"relative", overflow:"hidden" }}>
+      {/* Grid texture + glow, consistent with rest of the app's dark F1 theme */}
+      <div style={{ position:"fixed", inset:0, backgroundImage:"linear-gradient(rgba(225,6,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(225,6,0,0.03) 1px,transparent 1px)", backgroundSize:"60px 60px", pointerEvents:"none", zIndex:0 }}/>
+      <div style={{ position:"fixed", top:"8%", left:"50%", transform:"translateX(-50%)", width:640, height:320, background:`radial-gradient(ellipse,${data.accent}1f 0%,transparent 70%)`, pointerEvents:"none", zIndex:0, transition:"background 0.4s ease" }}/>
+
+      {/* Top bar: wordmark + Skip */}
+      <div style={{ position:"relative", zIndex:1, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 24px 0", maxWidth:640, margin:"0 auto", width:"100%", boxSizing:"border-box" }}>
+        <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:12, fontWeight:900, letterSpacing:3, color:"rgba(255,255,255,0.35)" }}>
+          {GAME_TITLE_UPPER} · ONBOARDING
+        </div>
+        <button
+          onClick={skip}
+          style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.14)", borderRadius:8, padding:"7px 14px", color:"rgba(255,255,255,0.6)", fontFamily:"'Rajdhani',sans-serif", fontSize:12, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", cursor:"pointer", transition:"all 0.15s" }}
+          onMouseEnter={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.1)"; e.currentTarget.style.color="#fff"; }}
+          onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.05)"; e.currentTarget.style.color="rgba(255,255,255,0.6)"; }}
+        >Skip Tutorial ⏭</button>
+      </div>
+
+      {/* Progress indicator */}
+      <div style={{ position:"relative", zIndex:1, maxWidth:640, margin:"18px auto 0", width:"100%", padding:"0 24px", boxSizing:"border-box" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          {TUTORIAL_PAGES.map((p, i) => (
+            <div key={i} style={{ flex:1, height:4, borderRadius:2, background: i <= page ? data.accent : "rgba(255,255,255,0.1)", transition:"background 0.3s ease", opacity: i <= page ? 0.9 : 1 }}/>
+          ))}
+        </div>
+        <div style={{ textAlign:"center", marginTop:8, fontSize:11, letterSpacing:2, color:"rgba(255,255,255,0.35)", fontWeight:700 }}>
+          {page + 1} / {total}
+        </div>
+      </div>
+
+      {/* Page content, centered, animated on page change */}
+      <div style={{ position:"relative", zIndex:1, flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px 20px 8px" }}>
+        <div
+          key={page}
+          style={{
+            width:"100%", maxWidth:560,
+            background:"rgba(255,255,255,0.03)", backdropFilter:"blur(20px)",
+            border:`1px solid ${data.accent}33`, borderRadius:20,
+            padding:"32px 32px 28px", position:"relative", overflow:"hidden",
+            animation: dir >= 0 ? "tutSlideInR 0.35s cubic-bezier(0.22,1,0.36,1) both" : "tutSlideInL 0.35s cubic-bezier(0.22,1,0.36,1) both",
+          }}
+        >
+          <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg,transparent,${data.accent},transparent)` }}/>
+
+          <div style={{ fontSize:11, letterSpacing:3, color:data.accent, fontWeight:700, marginBottom:14, opacity:0.85 }}>{data.eyebrow}</div>
+
+          <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:18 }}>
+            <div style={{ fontSize:34, lineHeight:1, filter:"drop-shadow(0 0 10px rgba(0,0,0,0.4))" }}>{data.icon}</div>
+            <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:"clamp(20px,4vw,26px)", fontWeight:900, color:"#fff", letterSpacing:0.5 }}>{data.title}</div>
+          </div>
+
+          {data.intro && <div style={{ fontSize:15, color:"rgba(255,255,255,0.8)", lineHeight:1.6, marginBottom:14, fontWeight:600 }}>{data.intro}</div>}
+          {data.body && <div style={{ fontSize:14, color:"rgba(255,255,255,0.55)", lineHeight:1.6, marginBottom:14 }}>{data.body}</div>}
+
+          {data.chips && (
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:18 }}>
+              {data.chips.map((c,i) => (
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:8, background:`${data.accent}14`, border:`1px solid ${data.accent}33`, borderRadius:10, padding:"10px 16px" }}>
+                  <span style={{ fontSize:18 }}>{c.icon}</span>
+                  <span style={{ fontSize:14, fontWeight:700, color:"#fff", letterSpacing:0.5 }}>{c.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {data.items && (
+            <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:6 }}>
+              {data.items.map((it,i) => (
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:12, background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"10px 14px" }}>
+                  <span style={{ fontSize:17, flexShrink:0 }}>{it.icon}</span>
+                  <span style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.5 }}>{it.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {data.subsections && (
+            <div style={{ display:"flex", flexDirection:"column", gap:14, marginTop:6 }}>
+              {data.subsections.map((s,i) => (
+                <div key={i} style={{ background:`${s.color}0f`, border:`1px solid ${s.color}33`, borderRadius:12, padding:"14px 16px" }}>
+                  <div style={{ fontFamily:"'Orbitron',sans-serif", fontSize:12, fontWeight:900, color:s.color, letterSpacing:2, marginBottom:8 }}>{s.title.toUpperCase()}</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    {s.lines.map((l,li) => (
+                      <div key={li} style={{ display:"flex", gap:8, alignItems:"flex-start" }}>
+                        <div style={{ width:4, height:4, borderRadius:"50%", background:s.color, flexShrink:0, marginTop:7, opacity:0.85 }}/>
+                        <div style={{ fontSize:13.5, color:"rgba(255,255,255,0.75)", lineHeight:1.55 }}>{l}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {data.tips && (
+            <div style={{ background:`${data.accent}0d`, border:`1px solid ${data.accent}2e`, borderRadius:12, padding:"14px 16px", marginTop: data.body || data.chips ? 4 : 0 }}>
+              {data.tipsTitle && <div style={{ fontSize:11.5, fontWeight:800, color:data.accent, letterSpacing:1.5, marginBottom:9, textTransform:"uppercase" }}>{data.tipsTitle}</div>}
+              <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+                {data.tips.map((t,i) => (
+                  <div key={i} style={{ display:"flex", gap:9, alignItems:"flex-start" }}>
+                    <div style={{ width:4, height:4, borderRadius:"50%", background:data.accent, flexShrink:0, marginTop:7, opacity:0.85 }}/>
+                    <div style={{ fontSize:13.5, color:"rgba(255,255,255,0.75)", lineHeight:1.55 }}>{t}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {data.footer && (
+            <div style={{ fontSize:13.5, color:"rgba(255,255,255,0.5)", lineHeight:1.6, marginTop:16, fontStyle:"italic", borderTop:"1px solid rgba(255,255,255,0.07)", paddingTop:14 }}>{data.footer}</div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer nav: checkbox + Back / Next / Begin Auction */}
+      <div style={{ position:"relative", zIndex:1, maxWidth:560, margin:"0 auto", width:"100%", padding:"4px 24px 28px", boxSizing:"border-box" }}>
+        <label style={{ display:"flex", alignItems:"center", gap:9, justifyContent:"center", marginBottom:18, cursor:"pointer", userSelect:"none" }}>
+          <input
+            type="checkbox"
+            checked={dontShow}
+            onChange={e=>setDontShow(e.target.checked)}
+            style={{ width:16, height:16, accentColor:data.accent, cursor:"pointer" }}
+          />
+          <span style={{ fontSize:12.5, color:"rgba(255,255,255,0.5)", letterSpacing:0.5 }}>Don't show this tutorial again</span>
+        </label>
+
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <button
+            onClick={goBack}
+            disabled={page === 0}
+            style={{
+              flex:"0 0 auto", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.14)",
+              borderRadius:10, padding:"13px 22px", color: page===0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.8)",
+              fontFamily:"'Rajdhani',sans-serif", fontSize:14, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase",
+              cursor: page===0 ? "default" : "pointer", transition:"all 0.15s",
+            }}
+            onMouseEnter={e=>{ if(page!==0){ e.currentTarget.style.background="rgba(255,255,255,0.1)"; e.currentTarget.style.color="#fff"; } }}
+            onMouseLeave={e=>{ if(page!==0){ e.currentTarget.style.background="rgba(255,255,255,0.05)"; e.currentTarget.style.color="rgba(255,255,255,0.8)"; } }}
+          >← Back</button>
+
+          <button
+            onClick={goNext}
+            style={{
+              flex:1, background:`linear-gradient(135deg,${data.accent}33,${data.accent}1a)`,
+              border:`1px solid ${data.accent}66`, borderRadius:10, padding:"14px 22px",
+              color:"#fff", fontFamily:"'Rajdhani',sans-serif", fontSize:15, fontWeight:800,
+              letterSpacing:2, textTransform:"uppercase", cursor:"pointer", transition:"all 0.2s",
+              boxShadow:`0 4px 18px ${data.accent}22`,
+            }}
+            onMouseEnter={e=>{ e.currentTarget.style.background=`linear-gradient(135deg,${data.accent}4d,${data.accent}26)`; }}
+            onMouseLeave={e=>{ e.currentTarget.style.background=`linear-gradient(135deg,${data.accent}33,${data.accent}1a)`; }}
+          >{isLast ? "🏁 Begin Auction" : "Next →"}</button>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes tutSlideInR { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes tutSlideInL { from { opacity:0; transform:translateX(-24px); } to { opacity:1; transform:translateX(0); } }
+      `}</style>
     </div>
   );
 }
